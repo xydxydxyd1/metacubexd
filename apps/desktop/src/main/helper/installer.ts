@@ -220,8 +220,21 @@ export function createHelperInstaller(
   }
 
   async function darwinIsInstalled(): Promise<boolean> {
-    const { stdout } = await exec(`launchctl print system/${label}`)
-    return stdout.includes(label)
+    try {
+      const { stdout } = await exec(`launchctl print system/${label}`)
+      return stdout.includes(label)
+    } catch (err) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        // couldn't find docs on launchctl codes, rely on logic in try block for
+        // not-found case
+        'code' in err
+      ) {
+        return false
+      }
+      throw err
+    }
   }
 
   // ---- Linux (systemd + pkexec) ----
